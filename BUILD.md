@@ -4,8 +4,8 @@ Everything needed to reproduce the working build from scratch: a local manifest,
 generated from the tested tree, and the exact build procedure. Full technical history and the
 reason behind every change: `docs/CHANGES_noblelte_los22.md`.
 
-## 0. Host requirements (tested)
-- Linux x86_64, ~350 GB free disk, 8 GB RAM minimum (tested on 7.6 GB: works with the settings below).
+## 0. Host requirements (tested on my hp zbook 15 g2 8gb ram sdd 480gb sata ssd)
+- Linux x86_64(Fedora 44), ~250 GB free disk, 8 GB RAM minimum (tested on 7.6 GB: works with the settings below).
 - Swap: zram 16 GB (zstd, priority 100) + a disk swapfile. Do **not** use a huge zram (45 GB zram caused OOM kills).
 - Close browsers/IDEs during the first ~50 min (Soong analysis is the most memory-hungry phase).
 
@@ -34,7 +34,7 @@ The script is idempotent and stops on the first conflict.
 ```bash
 export USE_CCACHE=1
 export CCACHE_DIR=~/.ccache
-ccache -M 50G
+ccache -M 20G
 cd ~/los22 && source build/envsetup.sh && breakfast noblelte
 ```
 
@@ -57,7 +57,8 @@ First install: format data as usual for a new ROM. Updates: no wipe needed.
 GApps (optional): flash NikGApps **after** the ROM. `ro.control_privapp_permissions=log`
 is set so missing GApps privapp allowlists do not block boot.
 
-## 7. Post-flash gate (before publishing anything)
+## 7. test everything before release (before publishing anything)
+connect your phone to the computer make sure to enable usb debuging and rooted debuging for devloper options in your phone and adb is installed on your computer 
 ```bash
 bash <bundle>/tools/smoke_test.sh     # must report 0 failures (GMS check only after GApps)
 ```
