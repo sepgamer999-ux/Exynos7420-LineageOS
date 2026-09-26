@@ -1,0 +1,8 @@
+diff --git a/config/boot-image-profile.txt b/config/boot-image-profile.txt
+new file mode 120000
+index 000000000000..792a7715d17b
+--- /dev/null
++++ b/config/boot-image-profile.txt
+@@ -0,0 +1 @@
++../boot/boot-image-profile.txt
+\ No newline at end of file

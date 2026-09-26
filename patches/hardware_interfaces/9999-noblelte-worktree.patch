@@ -1,0 +1,14 @@
+diff --git a/audio/common/all-versions/default/service/service.cpp b/audio/common/all-versions/default/service/service.cpp
+index 1557a9505d..a6d554b5b2 100644
+--- a/audio/common/all-versions/default/service/service.cpp
++++ b/audio/common/all-versions/default/service/service.cpp
+@@ -80,7 +80,8 @@ int main(int /* argc */, char* /* argv */ []) {
+         ::android::ProcessState::self()->startThreadPool();
+     }
+ 
+-    ABinderProcess_setThreadPoolMaxThreadCount(1);
++    // noblelte: do not shrink threadpool after startThreadPool() (A15 libbinder aborts)
++    // ABinderProcess_setThreadPoolMaxThreadCount(1);
+     ABinderProcess_startThreadPool();
+ 
+     const int32_t defaultValue = -1;

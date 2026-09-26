@@ -1,0 +1,102 @@
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index 9240dc1..3c484a6 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -54,3 +54,9 @@ WIFI_HIDL_FEATURE_DUAL_INTERFACE := true
+ 
+ # inherit from the proprietary version
+ include vendor/samsung/noblelte/BoardConfigVendor.mk
++
++# DISABLED: check_vintf_system fails because this legacy (non-full-treble) device
++# has no real separate /vendor partition mount at this build stage — checkvintf
++# cannot resolve /vendor/manifest.xml. Downgrades to a warning instead of a hard
++# ninja failure. See CHANGES_noblelte_los22.md section 14.
++BUILD_BROKEN_VINTF_ERROR := true
+diff --git a/bluetooth/bt_vendor.conf b/bluetooth/bt_vendor.conf
+index 089ee74..2da3584 100644
+--- a/bluetooth/bt_vendor.conf
++++ b/bluetooth/bt_vendor.conf
+@@ -1,2 +1,3 @@
+ # Firmware patch file name
+ FwPatchFileName = bcm4359B1_V0105.0106.hcd
++UartPort = /dev/ttySAC4
+diff --git a/device.mk b/device.mk
+index ebb9f4e..ec03264 100644
+--- a/device.mk
++++ b/device.mk
+@@ -56,3 +56,42 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/product_launched_with_l.mk)
+ 
+ # Inherit from universal7420-common
+ $(call inherit-product, device/samsung/universal7420-common/device-common.mk)
++
++# PowerShare (reverse wireless charging)
++PRODUCT_PACKAGES += vendor.lineage.powershare-service.default
++$(call soong_config_set, lineage_powershare, powershare_path, /sys/class/power_supply/battery/wc_tx_en)
++$(call soong_config_set, lineage_powershare, powershare_enabled, 1)
++$(call soong_config_set, lineage_powershare, powershare_disabled, 0)
++
++# DISABLED: PRODUCT_ENFORCE_VINTF_MANIFEST forces check_vintf_compatible, which
++# cannot pass on this device — it mixes pre-Treble-era Samsung HIDL vendor blobs
++# with a modern (Android 15) framework, so no single frozen FCM level's HAL set
++# matches both sides (confirmed: level 5 missing HALs removed from the modern
++# framework; level 8 requires newer HAL versions the old vendor blobs don't
++# provide). See CHANGES_noblelte_los22.md section 14.
++PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE := false
++OVERRIDE_PRODUCT_COMPRESSED_APEX := false
++
++# noblelte: vendor Android.bp modules existed but were never installed (32/64 blobs fixed from LOS21).
++PRODUCT_PACKAGES += libGLES_mali libMcClient libutils-v32
++
++# noblelte: A13+ keeps every BT profile disabled unless its sysprop is set
++PRODUCT_VENDOR_PROPERTIES += \
++    bluetooth.profile.a2dp.source.enabled=true \
++    bluetooth.profile.avrcp.target.enabled=true \
++    bluetooth.profile.bas.client.enabled=true \
++    bluetooth.profile.gatt.enabled=true \
++    bluetooth.profile.hfp.ag.enabled=true \
++    bluetooth.profile.hid.device.enabled=true \
++    bluetooth.profile.hid.host.enabled=true \
++    bluetooth.profile.map.server.enabled=true \
++    bluetooth.profile.opp.enabled=true \
++    bluetooth.profile.pan.nap.enabled=true \
++    bluetooth.profile.pan.panu.enabled=true \
++    bluetooth.profile.pbap.server.enabled=true
++
++# noblelte: Samsung legacy bauth HAL reports enroll progress as percentage
++PRODUCT_VENDOR_PROPERTIES += \
++    ro.vendor.fingerprint.uses_percentage_samples=true \
++    ro.vendor.fingerprint.type=home \
++    ro.vendor.fingerprint.max_enrollments=4
+diff --git a/lineage_noblelte.mk b/lineage_noblelte.mk
+index 581238c..7007023 100644
+--- a/lineage_noblelte.mk
++++ b/lineage_noblelte.mk
+@@ -36,9 +36,16 @@ PRODUCT_MANUFACTURER := samsung
+ PRODUCT_GMS_CLIENTID_BASE := android-samsung
+ 
+ # Use the latest approved GMS identifiers
+-PRODUCT_BUILD_PROP_OVERRIDES += \
+-	PRODUCT_NAME=nobleltejv \
+-	TARGET_DEVICE=noblelte \
+-	PRIVATE_BUILD_DESC="nobleltejv-user 7.0 NRD90M N920CXXS5CRH3 release-keys"
++# 2026-09-20 (see CHANGES_noblelte_los22.md section 7-ت): PRODUCT_BUILD_PROP_OVERRIDES
++# with PRODUCT_NAME/TARGET_DEVICE/PRIVATE_BUILD_DESC keys is REJECTED by the modern
++# Soong gen_build_prop.py ("isn't a valid prop override") - these key names no longer
++# exist in its config dict. Replaced with the officially supported *_FOR_ATTESTATION
++# mechanism, which achieves the same GMS-identity-matching purpose without touching
++# ro.product.name itself (see build/make/core/sysprop.mk + soong_extra_config.mk).
++PRODUCT_NAME_FOR_ATTESTATION := nobleltejv
++PRODUCT_MODEL_FOR_ATTESTATION := SM-N920C
++PRODUCT_BRAND_FOR_ATTESTATION := samsung
++PRODUCT_DEVICE_FOR_ATTESTATION := noblelte
++PRODUCT_MANUFACTURER_FOR_ATTESTATION := samsung
+ 
+ BUILD_FINGERPRINT := "samsung/nobleltejv/noblelte:7.0/NRD90M/N920CXXS5CRH3:user/release-keys"
+diff --git a/manifest.xml b/manifest.xml
+index 4fee2df..3d1fff7 100644
+--- a/manifest.xml
++++ b/manifest.xml
+@@ -1,2 +1,2 @@
+-<manifest version="1.0" type="device" target-level="legacy">
++<manifest version="1.0" type="device" target-level="8">
+ </manifest>

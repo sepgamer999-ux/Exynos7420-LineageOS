@@ -1,0 +1,611 @@
+diff --git a/Documentation/aoe/autoload.sh b/Documentation/aoe/autoload.sh
+old mode 100644
+new mode 100755
+diff --git a/Documentation/aoe/status.sh b/Documentation/aoe/status.sh
+old mode 100644
+new mode 100755
+diff --git a/Documentation/aoe/udev-install.sh b/Documentation/aoe/udev-install.sh
+old mode 100644
+new mode 100755
+diff --git a/Documentation/s390/config3270.sh b/Documentation/s390/config3270.sh
+old mode 100644
+new mode 100755
+diff --git a/Makefile b/Makefile
+index fff6cede258..a53be1a02cb 100644
+--- a/Makefile
++++ b/Makefile
+@@ -616,6 +616,7 @@ KBUILD_CFLAGS	+= $(CLANG_FLAGS)
+ KBUILD_AFLAGS	+= $(CLANG_FLAGS)
+ endif
+ KBUILD_CFLAGS += $(call cc-disable-warning, unused-const-variable)
++KBUILD_CFLAGS += $(call cc-disable-warning, strict-prototypes)
+ 
+ # The arch Makefile can set ARCH_{CPP,A,C}FLAGS to override the default
+ # values of the respective KBUILD_* variables
+@@ -792,7 +793,7 @@ KBUILD_CFLAGS   += $(call cc-option,-fconserve-stack)
+ KBUILD_CFLAGS   += $(call cc-option,-Werror=implicit-int)
+ 
+ # require functions to have arguments in prototypes, not empty 'int foo()'
+-KBUILD_CFLAGS   += $(call cc-option,-Werror=strict-prototypes)
++# KBUILD_CFLAGS += $(call cc-option,-Werror=strict-prototypes)  # DISABLED: legacy K&R-style declarations in old Samsung driver code trigger this on modern clang
+ 
+ # use the deterministic mode of AR if available
+ KBUILD_ARFLAGS := $(call ar-option,D)
+diff --git a/arch/arm/boot/install.sh b/arch/arm/boot/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/arm64/boot/install.sh b/arch/arm64/boot/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/arm64/configs/exynos7420-noblelte_defconfig b/arch/arm64/configs/exynos7420-noblelte_defconfig
+index fe132016669..e2a04f3037b 100644
+--- a/arch/arm64/configs/exynos7420-noblelte_defconfig
++++ b/arch/arm64/configs/exynos7420-noblelte_defconfig
+@@ -42,7 +42,7 @@ CONFIG_BUILDTIME_EXTABLE_SORT=y
+ # General setup
+ #
+ CONFIG_INIT_ENV_ARG_LIMIT=32
+-CONFIG_CROSS_COMPILE=""
++CONFIG_CROSS_COMPILE="aarch64-linux-android-"
+ CONFIG_LOCALVERSION=""
+ CONFIG_LOCALVERSION_AUTO=y
+ CONFIG_DEFAULT_HOSTNAME="(none)"
+@@ -800,7 +800,7 @@ CONFIG_NETFILTER_XT_MATCH_ECN=y
+ # CONFIG_NETFILTER_XT_MATCH_ESP is not set
+ CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=y
+ CONFIG_NETFILTER_XT_MATCH_HELPER=y
+-CONFIG_NETFILTER_XT_MATCH_HL=y
++# CONFIG_NETFILTER_XT_MATCH_HL is not set
+ CONFIG_NETFILTER_XT_MATCH_IPRANGE=y
+ CONFIG_NETFILTER_XT_MATCH_LENGTH=y
+ CONFIG_NETFILTER_XT_MATCH_LIMIT=y
+@@ -842,7 +842,7 @@ CONFIG_IP_NF_IPTABLES=y
+ CONFIG_IP_NF_MATCH_AH=y
+ CONFIG_IP_NF_MATCH_ECN=y
+ # CONFIG_IP_NF_MATCH_RPFILTER is not set
+-CONFIG_IP_NF_MATCH_TTL=y
++# CONFIG_IP_NF_MATCH_TTL is not set
+ CONFIG_IP_NF_FILTER=y
+ CONFIG_IP_NF_TARGET_REJECT=y
+ # CONFIG_IP_NF_TARGET_ULOG is not set
+@@ -4380,7 +4380,7 @@ CONFIG_STACKTRACE=y
+ # CONFIG_DEBUG_KOBJECT is not set
+ CONFIG_HAVE_DEBUG_BUGVERBOSE=y
+ CONFIG_DEBUG_BUGVERBOSE=y
+-CONFIG_DEBUG_INFO=y
++# CONFIG_DEBUG_INFO is not set
+ # CONFIG_DEBUG_INFO_REDUCED is not set
+ # CONFIG_DEBUG_VM is not set
+ # CONFIG_DEBUG_WRITECOUNT is not set
+diff --git a/arch/arm64/kernel/vdso/gen_vdso_offsets.sh b/arch/arm64/kernel/vdso/gen_vdso_offsets.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/blackfin/boot/install.sh b/arch/blackfin/boot/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/ia64/install.sh b/arch/ia64/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/m32r/boot/compressed/install.sh b/arch/m32r/boot/compressed/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/m68k/install.sh b/arch/m68k/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/mn10300/boot/install.sh b/arch/mn10300/boot/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/parisc/install.sh b/arch/parisc/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/powerpc/boot/install.sh b/arch/powerpc/boot/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/powerpc/kernel/prom_init_check.sh b/arch/powerpc/kernel/prom_init_check.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/powerpc/kernel/systbl_chk.sh b/arch/powerpc/kernel/systbl_chk.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/s390/boot/install.sh b/arch/s390/boot/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/sh/boot/compressed/install.sh b/arch/sh/boot/compressed/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/x86/boot/install.sh b/arch/x86/boot/install.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/x86/kernel/cpu/mkcapflags.sh b/arch/x86/kernel/cpu/mkcapflags.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/x86/syscalls/syscallhdr.sh b/arch/x86/syscalls/syscallhdr.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/x86/syscalls/syscalltbl.sh b/arch/x86/syscalls/syscalltbl.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/x86/um/vdso/checkundef.sh b/arch/x86/um/vdso/checkundef.sh
+old mode 100644
+new mode 100755
+diff --git a/arch/x86/vdso/checkundef.sh b/arch/x86/vdso/checkundef.sh
+old mode 100644
+new mode 100755
+diff --git a/drivers/kernelsu/kuid_ul_fix.sh b/drivers/kernelsu/kuid_ul_fix.sh
+old mode 100644
+new mode 100755
+diff --git a/drivers/kernelsu/setup.sh b/drivers/kernelsu/setup.sh
+old mode 100644
+new mode 100755
+diff --git a/drivers/staging/usbip/userspace/autogen.sh b/drivers/staging/usbip/userspace/autogen.sh
+old mode 100644
+new mode 100755
+diff --git a/drivers/staging/usbip/userspace/cleanup.sh b/drivers/staging/usbip/userspace/cleanup.sh
+old mode 100644
+new mode 100755
+diff --git a/drivers/video/exynos/decon_7420/Kconfig b/drivers/video/exynos/decon_7420/Kconfig
+index e8ceec8000f..4df4c36e602 100644
+--- a/drivers/video/exynos/decon_7420/Kconfig
++++ b/drivers/video/exynos/decon_7420/Kconfig
+@@ -93,7 +93,7 @@ config DECON_BLOCKING_MODE
+ 
+ config DECON_EVENT_LOG
+ 	bool "Display sub-system event logger (DECON/DSIM/VPP)"
+-        depends on DEBUG_INFO && EXYNOS_DECON_7420
++        depends on EXYNOS_DECON_7420
+         default y
+ 
+ config DSIM_ESD_RECOVERY_NOPOWER
+diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+index 5607ce0d86a..80a4c577c0d 100644
+--- a/include/uapi/linux/Kbuild
++++ b/include/uapi/linux/Kbuild
+@@ -431,5 +431,5 @@ header-y += hw_breakpoint.h
+ 
+ ## MDM9x35
+ header-y += msm_rmnet.h
+-header-y += rmnet_data.h
++# header-y += rmnet_data.h  # DISABLED: only include/linux/ internal header exists, no real uapi/ variant (see CHANGES_noblelte_los22.md)
+ 
+diff --git a/include/uapi/linux/if_addr.h b/include/uapi/linux/if_addr.h
+index 23357ab81a7..2f0da06a2bc 100644
+--- a/include/uapi/linux/if_addr.h
++++ b/include/uapi/linux/if_addr.h
+@@ -28,6 +28,7 @@ enum {
+ 	IFA_ANYCAST,
+ 	IFA_CACHEINFO,
+ 	IFA_MULTICAST,
++	IFA_FLAGS,
+ 	__IFA_MAX,
+ };
+ 
+diff --git a/include/uapi/linux/ion.h b/include/uapi/linux/ion.h
+deleted file mode 100644
+index 17e8dbb2426..00000000000
+--- a/include/uapi/linux/ion.h
++++ /dev/null
+@@ -1 +0,0 @@
+-../../../drivers/staging/android/uapi/ion.h
+\ No newline at end of file
+diff --git a/include/uapi/linux/ion.h b/include/uapi/linux/ion.h
+new file mode 120000
+index 00000000000..17e8dbb2426
+--- /dev/null
++++ b/include/uapi/linux/ion.h
+@@ -0,0 +1 @@
++../../../drivers/staging/android/uapi/ion.h
+\ No newline at end of file
+diff --git a/include/uapi/linux/netfilter/xt_CONNMARK.h b/include/uapi/linux/netfilter/xt_CONNMARK.h
+new file mode 120000
+index 00000000000..b6fb0416b48
+--- /dev/null
++++ b/include/uapi/linux/netfilter/xt_CONNMARK.h
+@@ -0,0 +1 @@
++xt_connmark.h
+\ No newline at end of file
+diff --git a/include/uapi/linux/netfilter/xt_DSCP.h b/include/uapi/linux/netfilter/xt_DSCP.h
+new file mode 100644
+index 00000000000..648e0b3bed2
+--- /dev/null
++++ b/include/uapi/linux/netfilter/xt_DSCP.h
+@@ -0,0 +1,26 @@
++/* x_tables module for setting the IPv4/IPv6 DSCP field
++ *
++ * (C) 2002 Harald Welte <laforge@gnumonks.org>
++ * based on ipt_FTOS.c (C) 2000 by Matthew G. Marsh <mgm@paktronix.com>
++ * This software is distributed under GNU GPL v2, 1991
++ *
++ * See RFC2474 for a description of the DSCP field within the IP Header.
++ *
++ * xt_DSCP.h,v 1.7 2002/03/14 12:03:13 laforge Exp
++*/
++#ifndef _XT_DSCP_TARGET_H
++#define _XT_DSCP_TARGET_H
++#include <linux/netfilter/xt_dscp.h>
++#include <linux/types.h>
++
++/* target info */
++struct xt_DSCP_info {
++	__u8 dscp;
++};
++
++struct xt_tos_target_info {
++	__u8 tos_value;
++	__u8 tos_mask;
++};
++
++#endif /* _XT_DSCP_TARGET_H */
+diff --git a/include/uapi/linux/netfilter/xt_MARK.h b/include/uapi/linux/netfilter/xt_MARK.h
+new file mode 120000
+index 00000000000..f404b830759
+--- /dev/null
++++ b/include/uapi/linux/netfilter/xt_MARK.h
+@@ -0,0 +1 @@
++xt_mark.h
+\ No newline at end of file
+diff --git a/include/uapi/linux/netfilter/xt_RATEEST.h b/include/uapi/linux/netfilter/xt_RATEEST.h
+new file mode 100644
+index 00000000000..6605e20ad8c
+--- /dev/null
++++ b/include/uapi/linux/netfilter/xt_RATEEST.h
+@@ -0,0 +1,15 @@
++#ifndef _XT_RATEEST_TARGET_H
++#define _XT_RATEEST_TARGET_H
++
++#include <linux/types.h>
++
++struct xt_rateest_target_info {
++	char			name[IFNAMSIZ];
++	__s8			interval;
++	__u8		ewma_log;
++
++	/* Used internally by the kernel */
++	struct xt_rateest	*est __attribute__((aligned(8)));
++};
++
++#endif /* _XT_RATEEST_TARGET_H */
+diff --git a/include/uapi/linux/netfilter/xt_TCPMSS.h b/include/uapi/linux/netfilter/xt_TCPMSS.h
+new file mode 100644
+index 00000000000..9a6960afc13
+--- /dev/null
++++ b/include/uapi/linux/netfilter/xt_TCPMSS.h
+@@ -0,0 +1,12 @@
++#ifndef _XT_TCPMSS_H
++#define _XT_TCPMSS_H
++
++#include <linux/types.h>
++
++struct xt_tcpmss_info {
++	__u16 mss;
++};
++
++#define XT_TCPMSS_CLAMP_PMTU 0xffff
++
++#endif /* _XT_TCPMSS_H */
+diff --git a/include/uapi/linux/netfilter_ipv4/ipt_ECN.h b/include/uapi/linux/netfilter_ipv4/ipt_ECN.h
+new file mode 100644
+index 00000000000..f499ee067c8
+--- /dev/null
++++ b/include/uapi/linux/netfilter_ipv4/ipt_ECN.h
+@@ -0,0 +1,33 @@
++/* Header file for iptables ipt_ECN target
++ *
++ * (C) 2002 by Harald Welte <laforge@gnumonks.org>
++ *
++ * This software is distributed under GNU GPL v2, 1991
++ * 
++ * ipt_ECN.h,v 1.3 2002/05/29 12:17:40 laforge Exp
++*/
++#ifndef _IPT_ECN_TARGET_H
++#define _IPT_ECN_TARGET_H
++
++#include <linux/types.h>
++#include <linux/netfilter/xt_DSCP.h>
++
++#define IPT_ECN_IP_MASK	(~XT_DSCP_MASK)
++
++#define IPT_ECN_OP_SET_IP	0x01	/* set ECN bits of IPv4 header */
++#define IPT_ECN_OP_SET_ECE	0x10	/* set ECE bit of TCP header */
++#define IPT_ECN_OP_SET_CWR	0x20	/* set CWR bit of TCP header */
++
++#define IPT_ECN_OP_MASK		0xce
++
++struct ipt_ECN_info {
++	__u8 operation; /* bitset of operations */
++	__u8 ip_ect;	/* ECT codepoint of IPv4 header, pre-shifted */
++	union {
++		struct {
++			__u8 ece:1, cwr:1; /* TCP ECT bits */
++		} tcp;
++	} proto;
++};
++
++#endif /* _IPT_ECN_TARGET_H */
+diff --git a/include/uapi/linux/netfilter_ipv4/ipt_TTL.h b/include/uapi/linux/netfilter_ipv4/ipt_TTL.h
+new file mode 100644
+index 00000000000..f6ac169d92f
+--- /dev/null
++++ b/include/uapi/linux/netfilter_ipv4/ipt_TTL.h
+@@ -0,0 +1,23 @@
++/* TTL modification module for IP tables
++ * (C) 2000 by Harald Welte <laforge@netfilter.org> */
++
++#ifndef _IPT_TTL_H
++#define _IPT_TTL_H
++
++#include <linux/types.h>
++
++enum {
++	IPT_TTL_SET = 0,
++	IPT_TTL_INC,
++	IPT_TTL_DEC
++};
++
++#define IPT_TTL_MAXMODE	IPT_TTL_DEC
++
++struct ipt_TTL_info {
++	__u8	mode;
++	__u8	ttl;
++};
++
++
++#endif
+diff --git a/include/uapi/linux/netfilter_ipv6/ip6t_HL.h b/include/uapi/linux/netfilter_ipv6/ip6t_HL.h
+new file mode 100644
+index 00000000000..ebd8ead1bb6
+--- /dev/null
++++ b/include/uapi/linux/netfilter_ipv6/ip6t_HL.h
+@@ -0,0 +1,24 @@
++/* Hop Limit modification module for ip6tables
++ * Maciej Soltysiak <solt@dns.toxicfilms.tv>
++ * Based on HW's TTL module */
++
++#ifndef _IP6T_HL_H
++#define _IP6T_HL_H
++
++#include <linux/types.h>
++
++enum {
++	IP6T_HL_SET = 0,
++	IP6T_HL_INC,
++	IP6T_HL_DEC
++};
++
++#define IP6T_HL_MAXMODE	IP6T_HL_DEC
++
++struct ip6t_HL_info {
++	__u8	mode;
++	__u8	hop_limit;
++};
++
++
++#endif
+diff --git a/init/main.c b/init/main.c
+index 5a71a30ed7f..6798961d613 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -984,7 +984,7 @@ void __ref do_deferred_initcalls(void)
+ 
+ 	flush_scheduled_work();
+ 
+-	free_initmem();
++	/* noblelte: free_initmem() here frees __init mem still used by bcmdhd -> silent reboot */
+ }
+ #endif
+ 
+diff --git a/kernel/bpf/inode.c b/kernel/bpf/inode.c
+index 9d4a48ddadb..1de22262456 100644
+--- a/kernel/bpf/inode.c
++++ b/kernel/bpf/inode.c
+@@ -184,12 +184,24 @@ bpf_lookup(struct inode *dir, struct dentry *dentry, unsigned flags)
+ 	return simple_lookup(dir, dentry, flags);
+ }
+ 
++static int bpf_rename2(struct inode *old_dir, struct dentry *old_dentry,
++		       struct inode *new_dir, struct dentry *new_dentry,
++		       unsigned int flags)
++{
++	/* netbpfload uses renameat2(RENAME_NOREPLACE); VFS already enforces
++	 * NOREPLACE (-EEXIST) before calling us, so only reject other flags. */
++	if (flags & ~RENAME_NOREPLACE)
++		return -EINVAL;
++	return simple_rename(old_dir, old_dentry, new_dir, new_dentry);
++}
++
+ static const struct inode_operations bpf_dir_iops = {
+ 	.lookup		= bpf_lookup,
+ 	.mknod		= bpf_mkobj,
+ 	.mkdir		= bpf_mkdir,
+ 	.rmdir		= simple_rmdir,
+ 	.rename		= simple_rename,
++	.rename2	= bpf_rename2,
+ 	.link		= simple_link,
+ 	.unlink		= simple_unlink,
+ };
+diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+index 164cdb2bff1..b65fb4fb7f5 100644
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -1442,7 +1442,7 @@ static size_t inet_nlmsg_size(void)
+ 	       + nla_total_size(4) /* IFA_LOCAL */
+ 	       + nla_total_size(4) /* IFA_BROADCAST */
+ 	       + nla_total_size(IFNAMSIZ) /* IFA_LABEL */
+-	       + nla_total_size(sizeof(struct ifa_cacheinfo)); /* IFA_CACHEINFO */
++	       + nla_total_size(sizeof(struct ifa_cacheinfo)) + nla_total_size(4) /* IFA_FLAGS */; /* IFA_CACHEINFO */
+ }
+ 
+ static inline u32 cstamp_delta(unsigned long cstamp)
+@@ -1510,6 +1510,7 @@ static int inet_fill_ifaddr(struct sk_buff *skb, struct in_ifaddr *ifa,
+ 	     nla_put_be32(skb, IFA_BROADCAST, ifa->ifa_broadcast)) ||
+ 	    (ifa->ifa_label[0] &&
+ 	     nla_put_string(skb, IFA_LABEL, ifa->ifa_label)) ||
++	    nla_put_u32(skb, IFA_FLAGS, ifa->ifa_flags) ||
+ 	    put_cacheinfo(skb, ifa->ifa_cstamp, ifa->ifa_tstamp,
+ 			  preferred, valid))
+ 		goto nla_put_failure;
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index 002151e22a7..eb04c28ec5c 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -4061,7 +4061,7 @@ static inline int inet6_ifaddr_msgsize(void)
+ {
+ 	return NLMSG_ALIGN(sizeof(struct ifaddrmsg))
+ 	       + nla_total_size(16) /* IFA_ADDRESS */
+-	       + nla_total_size(sizeof(struct ifa_cacheinfo));
++	       + nla_total_size(sizeof(struct ifa_cacheinfo)) + nla_total_size(4) /* IFA_FLAGS */;
+ }
+ 
+ static int inet6_fill_ifaddr(struct sk_buff *skb, struct inet6_ifaddr *ifa,
+@@ -4099,6 +4099,7 @@ static int inet6_fill_ifaddr(struct sk_buff *skb, struct inet6_ifaddr *ifa,
+ 	}
+ 
+ 	if (nla_put(skb, IFA_ADDRESS, 16, &ifa->addr) < 0 ||
++	    nla_put_u32(skb, IFA_FLAGS, ifa->flags) < 0 ||
+ 	    put_cacheinfo(skb, ifa->cstamp, ifa->tstamp, preferred, valid) < 0) {
+ 		nlmsg_cancel(skb, nlh);
+ 		return -EMSGSIZE;
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index 3f3b9aef861..c7cb55cccfb 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -338,7 +338,7 @@ quiet_cmd_link_o_target = LD      $@
+ cmd_link_o_target = $(if $(strip $(obj-y)),\
+ 		      $(LD) $(ld_flags) -r -o $@ $(filter $(obj-y), $^) \
+ 		      $(cmd_secanalysis),\
+-		      rm -f $@; $(AR) rcs$(KBUILD_ARFLAGS) $@)
++		      rm -f $@; $(CC) $(c_flags) -c -x c /dev/null -o $@)
+ 
+ $(builtin-target): $(obj-y) FORCE
+ 	$(call if_changed,link_o_target)
+diff --git a/scripts/android-major-version.sh b/scripts/android-major-version.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/android-version.sh b/scripts/android-version.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/checkkconfigsymbols.sh b/scripts/checkkconfigsymbols.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/checksyscalls.sh b/scripts/checksyscalls.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/clang-android.sh b/scripts/clang-android.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/depmod.sh b/scripts/depmod.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/dtc/update-dtc-source.sh b/scripts/dtc/update-dtc-source.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/exynos_checkpatch.sh b/scripts/exynos_checkpatch.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/find_matching_major.sh b/scripts/find_matching_major.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/find_matching_version.sh b/scripts/find_matching_version.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/fips_crypto_hmac.sh b/scripts/fips_crypto_hmac.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/fips_fmp_hmac.sh b/scripts/fips_fmp_hmac.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/gcc-goto.sh b/scripts/gcc-goto.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/gcc-version.sh b/scripts/gcc-version.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/gcc-x86_32-has-stack-protector.sh b/scripts/gcc-x86_32-has-stack-protector.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/gcc-x86_64-has-stack-protector.sh b/scripts/gcc-x86_64-has-stack-protector.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/gen_initramfs_list.sh b/scripts/gen_initramfs_list.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/headers.sh b/scripts/headers.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/headers_install.sh b/scripts/headers_install.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/kconfig/check.sh b/scripts/kconfig/check.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/kconfig/lxdialog/check-lxdialog.sh b/scripts/kconfig/lxdialog/check-lxdialog.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/kconfig/merge_config.sh b/scripts/kconfig/merge_config.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/ld-version.sh b/scripts/ld-version.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/link-vmlinux.sh b/scripts/link-vmlinux.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/mkuboot.sh b/scripts/mkuboot.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/replace_dir.sh b/scripts/replace_dir.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/rt-tester/check-all.sh b/scripts/rt-tester/check-all.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/selinux/install_policy.sh b/scripts/selinux/install_policy.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/tags.sh b/scripts/tags.sh
+old mode 100644
+new mode 100755
+diff --git a/scripts/xz_wrap.sh b/scripts/xz_wrap.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/hv/hv_get_dhcp_info.sh b/tools/hv/hv_get_dhcp_info.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/hv/hv_get_dns_info.sh b/tools/hv/hv_get_dns_info.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/hv/hv_set_ifconfig.sh b/tools/hv/hv_set_ifconfig.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/nfsd/inject_fault.sh b/tools/nfsd/inject_fault.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/perf/perf-archive.sh b/tools/perf/perf-archive.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/perf/util/generate-cmdlist.sh b/tools/perf/util/generate-cmdlist.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/power/cpupower/bench/cpufreq-bench_plot.sh b/tools/power/cpupower/bench/cpufreq-bench_plot.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/power/cpupower/bench/cpufreq-bench_script.sh b/tools/power/cpupower/bench/cpufreq-bench_script.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/power/cpupower/utils/version-gen.sh b/tools/power/cpupower/utils/version-gen.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/testing/fault-injection/failcmd.sh b/tools/testing/fault-injection/failcmd.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/testing/selftests/cpu-hotplug/on-off-test.sh b/tools/testing/selftests/cpu-hotplug/on-off-test.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/testing/selftests/efivarfs/efivarfs.sh b/tools/testing/selftests/efivarfs/efivarfs.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/testing/selftests/memory-hotplug/on-off-test.sh b/tools/testing/selftests/memory-hotplug/on-off-test.sh
+old mode 100644
+new mode 100755
+diff --git a/tools/usb/hcd-tests.sh b/tools/usb/hcd-tests.sh
+old mode 100644
+new mode 100755

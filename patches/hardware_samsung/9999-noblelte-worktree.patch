@@ -1,0 +1,599 @@
+diff --git a/aidl/sensors/Android.bp b/aidl/sensors/Android.bp
+deleted file mode 100644
+index e3b18cc..0000000
+--- a/aidl/sensors/Android.bp
++++ /dev/null
+@@ -1,57 +0,0 @@
+-//
+-// Copyright (C) 2020 The Android Open Source Project
+-// Copyright (C) 2022-2024 The LineageOS Project
+-//
+-// Licensed under the Apache License, Version 2.0 (the "License");
+-// you may not use this file except in compliance with the License.
+-// You may obtain a copy of the License at
+-//
+-//      http://www.apache.org/licenses/LICENSE-2.0
+-//
+-// Unless required by applicable law or agreed to in writing, software
+-// distributed under the License is distributed on an "AS IS" BASIS,
+-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-// See the License for the specific language governing permissions and
+-// limitations under the License.
+-
+-cc_binary {
+-    name: "android.hardware.sensors-service.samsung-multihal",
+-    vendor: true,
+-    relative_install_path: "hw",
+-    srcs: [
+-        "HalProxySamsung.cpp",
+-        "service.cpp",
+-    ],
+-    init_rc: ["android.hardware.sensors-service.samsung-multihal.rc"],
+-    vintf_fragments: ["android.hardware.sensors-samsung-multihal.xml"],
+-    header_libs: [
+-        "android.hardware.sensors@2.X-multihal.header",
+-        "android.hardware.sensors@2.X-shared-utils",
+-    ],
+-    shared_libs: [
+-        "android.hardware.sensors@2.0",
+-        "android.hardware.sensors@2.0-ScopedWakelock",
+-        "android.hardware.sensors@2.1",
+-        "android.hardware.sensors-V2-ndk",
+-        "libbase",
+-        "libbinder_ndk",
+-        "libcutils",
+-        "libfmq",
+-        "libhidlbase",
+-        "liblog",
+-        "libpower",
+-        "libutils",
+-    ],
+-    static_libs: [
+-        "android.hardware.sensors@1.0-convert",
+-        "android.hardware.sensors@2.X-multihal",
+-        "android.hardware.sensors@aidl-multihal",
+-        "libaidlcommonsupport",
+-    ],
+-}
+-
+-cc_library_shared {
+-    name: "sensors.sensorhub_wait_for_mcu",
+-    srcs: ["SensorHubWaitForMCUInit.cpp"],
+-    vendor: true,
+-}
+diff --git a/aidl/sensors/HalProxySamsung.cpp b/aidl/sensors/HalProxySamsung.cpp
+deleted file mode 100644
+index eecd4d8..0000000
+--- a/aidl/sensors/HalProxySamsung.cpp
++++ /dev/null
+@@ -1,53 +0,0 @@
+-/*
+- * Copyright (C) 2024 The LineageOS Project
+- *
+- * SPDX-License-Identifier: Apache-2.0
+- */
+-
+-#include "HalProxySamsung.h"
+-
+-#include <ConvertUtils.h>
+-
+-// #define VERBOSE
+-
+-namespace aidl {
+-namespace android {
+-namespace hardware {
+-namespace sensors {
+-namespace implementation {
+-
+-ndk::ScopedAStatus HalProxySamsung::getSensorsList(
+-        std::vector<::aidl::android::hardware::sensors::SensorInfo>* _aidl_return) {
+-    for (const auto& sensor : HalProxy::getSensors()) {
+-        SensorInfo dst = sensor.second;
+-
+-        if (dst.requiredPermission == "com.samsung.permission.SSENSOR") {
+-            dst.requiredPermission = "";
+-        }
+-
+-        if (dst.typeAsString == "com.samsung.sensor.physical_proximity" ||
+-            dst.typeAsString == "com.samsung.sensor.hover_proximity") {
+-            ALOGI("Fixing %s", dst.typeAsString.c_str());
+-            dst.type = ::android::hardware::sensors::V2_1::SensorType::PROXIMITY;
+-            dst.typeAsString = SENSOR_STRING_TYPE_PROXIMITY;
+-            dst.maxRange = 1;
+-        }
+-
+-#ifdef VERBOSE
+-        ALOGI("SENSOR NAME:%s           ", dst.name.c_str());
+-        ALOGI("       VENDOR:%s         ", dst.name.c_str());
+-        ALOGI("       TYPE:%d           ", (uint32_t)dst.type);
+-        ALOGI("       TYPE_AS_STRING:%s ", dst.typeAsString.c_str());
+-#endif
+-
+-        _aidl_return->push_back(convertSensorInfo(dst));
+-    }
+-
+-    return ndk::ScopedAStatus::ok();
+-}
+-
+-}  // namespace implementation
+-}  // namespace sensors
+-}  // namespace hardware
+-}  // namespace android
+-}  // namespace aidl
+diff --git a/aidl/sensors/HalProxySamsung.h b/aidl/sensors/HalProxySamsung.h
+deleted file mode 100644
+index 053010f..0000000
+--- a/aidl/sensors/HalProxySamsung.h
++++ /dev/null
+@@ -1,26 +0,0 @@
+-/*
+- * Copyright (C) 2024 The LineageOS Project
+- *
+- * SPDX-License-Identifier: Apache-2.0
+- */
+-
+-#pragma once
+-
+-#include <HalProxyAidl.h>
+-
+-namespace aidl {
+-namespace android {
+-namespace hardware {
+-namespace sensors {
+-namespace implementation {
+-
+-class HalProxySamsung : public HalProxyAidl {
+-    ndk::ScopedAStatus getSensorsList(
+-            std::vector<::aidl::android::hardware::sensors::SensorInfo>* _aidl_return) override;
+-};
+-
+-}  // namespace implementation
+-}  // namespace sensors
+-}  // namespace hardware
+-}  // namespace android
+-}  // namespace aidl
+diff --git a/aidl/sensors/SensorHubWaitForMCUInit.cpp b/aidl/sensors/SensorHubWaitForMCUInit.cpp
+deleted file mode 100644
+index 3a63f2b..0000000
+--- a/aidl/sensors/SensorHubWaitForMCUInit.cpp
++++ /dev/null
+@@ -1,42 +0,0 @@
+-/*
+- * Copyright (C) 2024 The LineageOS Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-#include <dlfcn.h>
+-#include <chrono>
+-#include <fstream>
+-#include <thread>
+-
+-extern "C" void* sensorsHalGetSubHal(uint32_t* version) {
+-    static auto sensorsHalGetSubHalOrig = reinterpret_cast<typeof(sensorsHalGetSubHal)*>(
+-            dlsym(dlopen("sensors.sensorhub.so", RTLD_NOW), "sensorsHalGetSubHal"));
+-
+-    while (true) {
+-        std::ifstream mcu_test("/sys/devices/virtual/sensors/ssp_sensor/mcu_test");
+-
+-        if (mcu_test) {
+-            std::string value;
+-            mcu_test >> value;
+-
+-            if (value.ends_with(",OK")) {
+-                break;
+-            }
+-        }
+-
+-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+-    }
+-
+-    return sensorsHalGetSubHalOrig(version);
+-}
+diff --git a/aidl/sensors/android.hardware.sensors-samsung-multihal.xml b/aidl/sensors/android.hardware.sensors-samsung-multihal.xml
+deleted file mode 100644
+index 15a28fe..0000000
+--- a/aidl/sensors/android.hardware.sensors-samsung-multihal.xml
++++ /dev/null
+@@ -1,23 +0,0 @@
+-<!--
+-  ~ Copyright (C) 2021 The Android Open Source Project
+-  ~
+-  ~ Licensed under the Apache License, Version 2.0 (the "License");
+-  ~ you may not use this file except in compliance with the License.
+-  ~ You may obtain a copy of the License at
+-  ~
+-  ~      http://www.apache.org/licenses/LICENSE-2.0
+-  ~
+-  ~ Unless required by applicable law or agreed to in writing, software
+-  ~ distributed under the License is distributed on an "AS IS" BASIS,
+-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-  ~ See the License for the specific language governing permissions and
+-  ~ limitations under the License.
+-  -->
+-
+-<manifest version="1.0" type="device">
+-    <hal format="aidl" override="true">
+-        <name>android.hardware.sensors</name>
+-        <version>2</version>
+-        <fqname>ISensors/default</fqname>
+-    </hal>
+-</manifest>
+diff --git a/aidl/sensors/android.hardware.sensors-service.samsung-multihal.rc b/aidl/sensors/android.hardware.sensors-service.samsung-multihal.rc
+deleted file mode 100644
+index 1c36eaf..0000000
+--- a/aidl/sensors/android.hardware.sensors-service.samsung-multihal.rc
++++ /dev/null
+@@ -1,7 +0,0 @@
+-service vendor.sensors-hal-multihal /vendor/bin/hw/android.hardware.sensors-service.samsung-multihal
+-    class hal
+-    user system
+-    group system wakelock context_hub input uhid
+-    task_profiles ServiceCapacityLow
+-    capabilities BLOCK_SUSPEND
+-    rlimit rtprio 10 10
+diff --git a/aidl/sensors/service.cpp b/aidl/sensors/service.cpp
+deleted file mode 100644
+index 2575e9a..0000000
+--- a/aidl/sensors/service.cpp
++++ /dev/null
+@@ -1,37 +0,0 @@
+-/*
+- * Copyright (C) 2021 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-#include <android-base/logging.h>
+-#include <android/binder_manager.h>
+-#include <android/binder_process.h>
+-
+-#include "HalProxySamsung.h"
+-
+-using ::aidl::android::hardware::sensors::implementation::HalProxySamsung;
+-
+-int main() {
+-    ABinderProcess_setThreadPoolMaxThreadCount(0);
+-
+-    // Make a default multihal sensors service
+-    auto halProxy = ndk::SharedRefBase::make<HalProxySamsung>();
+-    const std::string halProxyName = std::string() + HalProxySamsung::descriptor + "/default";
+-    binder_status_t status =
+-            AServiceManager_addService(halProxy->asBinder().get(), halProxyName.c_str());
+-    CHECK_EQ(status, STATUS_OK);
+-
+-    ABinderProcess_joinThreadPool();
+-    return EXIT_FAILURE;  // should not reach
+-}
+diff --git a/hidl/powershare/Android.bp b/hidl/powershare/Android.bp
+deleted file mode 100644
+index 3affa2b..0000000
+--- a/hidl/powershare/Android.bp
++++ /dev/null
+@@ -1,35 +0,0 @@
+-//
+-// Copyright (C) 2020-2024 The LineageOS Project
+-//
+-// Licensed under the Apache License, Version 2.0 (the "License");
+-// you may not use this file except in compliance with the License.
+-// You may obtain a copy of the License at
+-//
+-//      http://www.apache.org/licenses/LICENSE-2.0
+-//
+-// Unless required by applicable law or agreed to in writing, software
+-// distributed under the License is distributed on an "AS IS" BASIS,
+-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-// See the License for the specific language governing permissions and
+-// limitations under the License.
+-//
+-
+-cc_binary {
+-    name: "vendor.lineage.powershare@1.0-service.samsung",
+-    defaults: ["samsung_header_path_defaults"],
+-    relative_install_path: "hw",
+-    init_rc: ["vendor.lineage.powershare@1.0-service.samsung.rc"],
+-    vintf_fragments: ["vendor.lineage.powershare@1.0-service.samsung.xml"],
+-    srcs: [
+-        "PowerShare.cpp",
+-        "service.cpp",
+-    ],
+-    shared_libs: [
+-        "libbase",
+-        "libbinder",
+-        "libhidlbase",
+-        "libutils",
+-        "vendor.lineage.powershare@1.0",
+-    ],
+-    vendor: true,
+-}
+diff --git a/hidl/powershare/PowerShare.cpp b/hidl/powershare/PowerShare.cpp
+deleted file mode 100644
+index bf18370..0000000
+--- a/hidl/powershare/PowerShare.cpp
++++ /dev/null
+@@ -1,99 +0,0 @@
+-/*
+- * Copyright (C) 2020 The LineageOS Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-#define LOG_TAG "powershare@1.0-service.samsung"
+-
+-#include "PowerShare.h"
+-#include <android-base/logging.h>
+-#include <samsung_powershare.h>
+-
+-#include <fstream>
+-#include <iostream>
+-
+-namespace vendor {
+-namespace lineage {
+-namespace powershare {
+-namespace V1_0 {
+-namespace implementation {
+-
+-/*
+- * Write value to path and close file.
+- */
+-template <typename T>
+-static void set(const std::string& path, const T& value) {
+-    std::ofstream file(path);
+-
+-    if (!file) {
+-        PLOG(ERROR) << "Failed to open: " << path;
+-        return;
+-    }
+-
+-    LOG(DEBUG) << "write: " << path << " value: " << value;
+-
+-    file << value << std::endl;
+-
+-    if (!file) {
+-        PLOG(ERROR) << "Failed to write: " << path << " value: " << value;
+-    }
+-}
+-
+-template <typename T>
+-static T get(const std::string& path, const T& def) {
+-    std::ifstream file(path);
+-
+-    if (!file) {
+-        PLOG(ERROR) << "Failed to open: " << path;
+-        return def;
+-    }
+-
+-    T result;
+-
+-    file >> result;
+-
+-    if (file.fail()) {
+-        PLOG(ERROR) << "Failed to read: " << path;
+-        return def;
+-    } else {
+-        LOG(DEBUG) << "read: " << path << " value: " << result;
+-        return result;
+-    }
+-}
+-
+-Return<bool> PowerShare::isEnabled() {
+-    return get(POWERSHARE_PATH, 0) == 1;
+-}
+-
+-Return<bool> PowerShare::setEnabled(bool enable) {
+-    set(POWERSHARE_PATH, enable ? 1 : 0);
+-
+-    return isEnabled();
+-}
+-
+-Return<uint32_t> PowerShare::getMinBattery() {
+-    return get(POWERSHARE_STOP_CAPACITY_PATH, 0);
+-}
+-
+-Return<uint32_t> PowerShare::setMinBattery(uint32_t minBattery) {
+-    set(POWERSHARE_STOP_CAPACITY_PATH, minBattery);
+-
+-    return getMinBattery();
+-}
+-
+-}  // namespace implementation
+-}  // namespace V1_0
+-}  // namespace powershare
+-}  // namespace lineage
+-}  // namespace vendor
+diff --git a/hidl/powershare/PowerShare.h b/hidl/powershare/PowerShare.h
+deleted file mode 100644
+index 7d87baf..0000000
+--- a/hidl/powershare/PowerShare.h
++++ /dev/null
+@@ -1,51 +0,0 @@
+-/*
+- * Copyright (C) 2020-2022 The LineageOS Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-#pragma once
+-
+-#include <hidl/MQDescriptor.h>
+-#include <hidl/Status.h>
+-#include <vendor/lineage/powershare/1.0/IPowerShare.h>
+-
+-namespace vendor {
+-namespace lineage {
+-namespace powershare {
+-namespace V1_0 {
+-namespace implementation {
+-
+-using ::android::sp;
+-using ::android::hardware::hidl_array;
+-using ::android::hardware::hidl_memory;
+-using ::android::hardware::hidl_string;
+-using ::android::hardware::hidl_vec;
+-using ::android::hardware::Return;
+-using ::android::hardware::Void;
+-
+-using ::vendor::lineage::powershare::V1_0::IPowerShare;
+-
+-
+-struct PowerShare : public IPowerShare {
+-    Return<bool> isEnabled() override;
+-    Return<bool> setEnabled(bool enable) override;
+-    Return<uint32_t> getMinBattery() override;
+-    Return<uint32_t> setMinBattery(uint32_t minBattery) override;
+-};
+-
+-}  // namespace implementation
+-}  // namespace V1_0
+-}  // namespace powershare
+-}  // namespace lineage
+-}  // namespace vendor
+diff --git a/hidl/powershare/samsung_powershare.h b/hidl/powershare/samsung_powershare.h
+deleted file mode 100644
+index 0963ca0..0000000
+--- a/hidl/powershare/samsung_powershare.h
++++ /dev/null
+@@ -1,20 +0,0 @@
+-/*
+- * Copyright (C) 2020-2022 The LineageOS Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-#pragma once
+-
+-#define POWERSHARE_PATH "/sys/class/power_supply/battery/wc_tx_en"
+-#define POWERSHARE_STOP_CAPACITY_PATH "/sys/class/power_supply/battery/wc_tx_stop_capacity"
+diff --git a/hidl/powershare/service.cpp b/hidl/powershare/service.cpp
+deleted file mode 100644
+index b3d5d3d..0000000
+--- a/hidl/powershare/service.cpp
++++ /dev/null
+@@ -1,50 +0,0 @@
+-/*
+- * Copyright (C) 2020 The LineageOS Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-#define LOG_TAG "powershare@1.0-service.samsung"
+-
+-#include <android-base/logging.h>
+-#include <hidl/HidlTransportSupport.h>
+-
+-#include "PowerShare.h"
+-
+-using android::hardware::configureRpcThreadpool;
+-using android::hardware::joinRpcThreadpool;
+-
+-using vendor::lineage::powershare::V1_0::IPowerShare;
+-using vendor::lineage::powershare::V1_0::implementation::PowerShare;
+-
+-using android::OK;
+-using android::status_t;
+-
+-int main() {
+-    android::sp<PowerShare> service = new PowerShare();
+-
+-    configureRpcThreadpool(1, true);
+-
+-    status_t status = service->registerAsService();
+-    if (status != OK) {
+-        LOG(ERROR) << "Cannot register PowerShare HAL service.";
+-        return 1;
+-    }
+-
+-    LOG(INFO) << "PowerShare HAL service ready.";
+-
+-    joinRpcThreadpool();
+-
+-    LOG(ERROR) << "PowerShare HAL service failed to join thread pool.";
+-    return 1;
+-}
+diff --git a/hidl/powershare/vendor.lineage.powershare@1.0-service.samsung.rc b/hidl/powershare/vendor.lineage.powershare@1.0-service.samsung.rc
+deleted file mode 100644
+index de95798..0000000
+--- a/hidl/powershare/vendor.lineage.powershare@1.0-service.samsung.rc
++++ /dev/null
+@@ -1,4 +0,0 @@
+-service vendor.powershare-hal-1-0 /vendor/bin/hw/vendor.lineage.powershare@1.0-service.samsung
+-    class hal
+-    user system
+-    group system
+diff --git a/hidl/powershare/vendor.lineage.powershare@1.0-service.samsung.xml b/hidl/powershare/vendor.lineage.powershare@1.0-service.samsung.xml
+deleted file mode 100644
+index b4af2cd..0000000
+--- a/hidl/powershare/vendor.lineage.powershare@1.0-service.samsung.xml
++++ /dev/null
+@@ -1,11 +0,0 @@
+-<manifest version="1.0" type="device">
+-    <hal format="hidl">
+-        <name>vendor.lineage.powershare</name>
+-        <transport>hwbinder</transport>
+-        <version>1.0</version>
+-        <interface>
+-            <name>IPowerShare</name>
+-            <instance>default</instance>
+-        </interface>
+-    </hal>
+-</manifest>

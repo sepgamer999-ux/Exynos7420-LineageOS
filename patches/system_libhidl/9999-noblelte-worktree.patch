@@ -1,0 +1,13 @@
+diff --git a/transport/ServiceManagement.cpp b/transport/ServiceManagement.cpp
+index b5e02df..7fc5d7b 100644
+--- a/transport/ServiceManagement.cpp
++++ b/transport/ServiceManagement.cpp
+@@ -148,7 +148,7 @@ namespace details {
+ #ifdef ENFORCE_VINTF_MANIFEST
+ static constexpr bool kEnforceVintfManifest = true;
+ #else
+-static constexpr bool kEnforceVintfManifest = false;
++static constexpr bool kEnforceVintfManifest = true; // noblelte: trust device manifest at runtime (avoid 3s race waits -> phone ANR)
+ #endif
+ 
+ static bool* getTrebleTestingOverridePtr() {

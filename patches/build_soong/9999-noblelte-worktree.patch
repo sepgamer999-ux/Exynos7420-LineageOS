@@ -1,0 +1,12 @@
+diff --git a/java/config/config.go b/java/config/config.go
+index 87703d821..516864bf6 100644
+--- a/java/config/config.go
++++ b/java/config/config.go
+@@ -64,6 +64,7 @@ var (
+ 		"-XX:+UseDynamicNumberOfGCThreads",
+ 	}
+ 	javacVmFlagsList = []string{
++		"-J-Xmx6g",
+ 		`-J-XX:OnError="cat hs_err_pid%p.log"`,
+ 		"-J-XX:CICompilerCount=6",
+ 		"-J-XX:+UseDynamicNumberOfGCThreads",
