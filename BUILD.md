@@ -14,11 +14,12 @@ reason behind every change: `docs/CHANGES_noblelte_los22.md`.
 mkdir -p ~/los22 && cd ~/los22
 repo init -u https://github.com/LineageOS/android.git -b lineage-22.2 --git-lfs
 mkdir -p .repo/local_manifests
-cp <bundle>/manifests/noblelte.xml .repo/local_manifests/
+```
+copy roomservice.xml to .repo/local_manifests before repo sync 
+
+```bash
 repo sync -c -j4 --force-sync --no-clone-bundle --no-tags
 ```
-For a bit-exact reproduction use the pinned revisions instead:
-`cp <bundle>/manifests/pinned-manifest.xml .repo/manifests/pinned.xml && repo init -m pinned.xml && repo sync ...`
 
 ## 2. Apply the patch set
 ```bash
