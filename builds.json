@@ -1,6 +1,15 @@
 {
   "response": [
     {
+      "datetime": 1791431970,
+      "filename": "hotfix-lineage-22.2-20261001-UNOFFICIAL-noblelte.zip",
+      "id": "83728748a2080421411a3ec3d5279c44805b9e6cda9b80003da4e75e817543e1",
+      "romtype": "UNOFFICIAL",
+      "size": 917388333,
+      "url": "https://github.com/sepgamer999-ux/Exynos7420-LineageOS/releases/download/los22.2-sep-2026-hf2/hotfix-lineage-22.2-20261001-UNOFFICIAL-noblelte.zip",
+      "version": "22.2"
+    },
+    {
       "datetime": 1790937100,
       "filename": "lineage-22.2-20261001-UNOFFICIAL-noblelte.zip",
       "id": "2ff3c62170d06180f121ea0c72de6e472e217bc406faf90e145abb47bff44eaf",
